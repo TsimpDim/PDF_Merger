@@ -5,8 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PDF_Merger"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
-        
-    </Grid>
+        Title="PDF Merger" Height="436" Width="1059" Icon="./Resources/PDF_Merger_icon.png">
+
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Left">
+            <Button   Content="Open Files" Click="Explorer_Button_Click"  Width="250" Height="25"/>
+            <Button   Content="Merge!" Width="250" Height="25"/>
+        </StackPanel>
+
+        <ListView>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="" Width="25"/>
+                    <GridViewColumn Header="#" Width="25"/>
+                    <GridViewColumn Header="Path\File" Width="auto"/>
+
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </DockPanel>
 </Window>

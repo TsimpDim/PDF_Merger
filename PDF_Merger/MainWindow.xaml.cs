@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.Win32;
 
 namespace PDF_Merger
 {
@@ -23,6 +24,16 @@ namespace PDF_Merger
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+
+
+        private void Explorer_Button_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openDlg = new OpenFileDialog();
+            openDlg.ShowDialog();
+
+            Title = openDlg.FileNames[0].ToString();
         }
     }
 }
