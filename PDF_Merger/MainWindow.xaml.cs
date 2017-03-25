@@ -21,6 +21,7 @@ namespace PDF_Merger
     /// </summary>
     public partial class MainWindow : Window
     {
+        int i = 0;
         public MainWindow()
         {
             InitializeComponent();
@@ -30,10 +31,25 @@ namespace PDF_Merger
 
         private void Explorer_Button_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openDlg = new OpenFileDialog();
+            OpenFileDialog openDlg = new OpenFileDialog(); //Create a new FileDialog
+            openDlg.Multiselect = true;//Allow the user to select multiple files
+            openDlg.Filter = "PDF Files (*.pdf) |*.pdf"; //Allow only .pdf's
             openDlg.ShowDialog();
 
-            Title = openDlg.FileNames[0].ToString();
+            foreach (string newfile in openDlg.FileNames)//For every file he chose
+            {
+                this.filelist.Items.Add(new File { toMerge = true, file_id = i, file_path = newfile });//Create a new item on the "filelist" list with the correct attributes --!! toMerge should be a checkbox
+                i++;//Iterate the id
+            }
         }
+    }
+
+    public class File //The class under which we save the files the user chooses
+    {
+        public bool toMerge { get; set; }
+
+        public int file_id { get; set; }
+
+        public string file_path  { get; set; }
     }
 }

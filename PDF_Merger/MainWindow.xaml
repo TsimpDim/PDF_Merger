@@ -13,13 +13,12 @@
             <Button   Content="Merge!" Width="250" Height="25"/>
         </StackPanel>
 
-        <ListView>
+        <ListView x:Name="filelist">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="" Width="25"/>
-                    <GridViewColumn Header="#" Width="25"/>
-                    <GridViewColumn Header="Path\File" Width="auto"/>
-
+                    <GridViewColumn Header="" Width="25" DisplayMemberBinding="{Binding toMerge}"/>
+                    <GridViewColumn Header="#" Width="25" DisplayMemberBinding="{Binding file_id}"/>
+                    <GridViewColumn Header="Path\File" Width="auto" DisplayMemberBinding="{Binding file_path}"/>
                 </GridView>
             </ListView.View>
         </ListView>
