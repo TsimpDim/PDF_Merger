@@ -10,17 +10,28 @@
     <DockPanel>
         <StackPanel DockPanel.Dock="Left">
             <Button   Content="Open Files" Click="Explorer_Button_Click"  Width="250" Height="25"/>
-            <Button   Content="Merge!" Width="250" Height="25"/>
+            <Label Content="Merged PDF Name (No extension):" Margin="0 10 0 0" Target="{Binding ElementName=finalpdf}"/>
+            <TextBox DockPanel.Dock="Left" Name="finalpdf"/>
+            <Label Content="Save file to:" Margin="0 10 0 0" Target="{Binding ElementName=finalpdfpath}"/>
+            <DockPanel>
+                <TextBox DockPanel.Dock="Left" Name="finalpdfpath" MaxLength="30" Width="221" />
+                <Button Content="..." MaxWidth="30" DockPanel.Dock="Right" Width="28"></Button>
+            </DockPanel>
+            <Button   Content="Merge!" Click="CreateMergedPDF" Width="250" Height="25" Margin="0 30 0 0"/>
+
+
+
         </StackPanel>
 
         <ListView x:Name="filelist">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="" Width="25" DisplayMemberBinding="{Binding toMerge}"/>
+                    <GridViewColumn Header="Include" Width="80" DisplayMemberBinding="{Binding toMerge}" />
                     <GridViewColumn Header="#" Width="25" DisplayMemberBinding="{Binding file_id}"/>
                     <GridViewColumn Header="Path\File" Width="auto" DisplayMemberBinding="{Binding file_path}"/>
                 </GridView>
             </ListView.View>
         </ListView>
+
     </DockPanel>
 </Window>
