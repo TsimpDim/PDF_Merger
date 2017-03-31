@@ -68,8 +68,13 @@ namespace PDF_Merger
                     pdfDoc.Close();
 
                 string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
+
+                if (File.Exists(endfloc))
+                {
+                    File.Delete(endfloc);
+                }
                 File.Move(from, endfloc); //Move from .exe path to desired path
-                Process.Start(endfloc);
+                Process.Start(System.IO.Path.GetDirectoryName(endfloc));
             }
 
 
@@ -77,6 +82,11 @@ namespace PDF_Merger
 
         private void MergePDF(object sender, RoutedEventArgs e)
         {
+            if(filelist.Items.Count <= 0) //If no PDFs have been added, don't even bother with merging
+            {
+                System.Windows.MessageBox.Show("Please add the files you want to merge","Error");
+                return;
+            }
             SaveFileDialog svFd = new SaveFileDialog();
             svFd.FileName = "Merged.pdf";
             svFd.Filter = "PDF File (*.pdf) |*.pdf";
@@ -99,6 +109,11 @@ namespace PDF_Merger
             public int file_id { get; set; }
 
             public string file_path { get; set; }
+        }
+
+        private void filelist_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            //CHANGE toMerge TO FALSE/TRUE
         }
     }
 }

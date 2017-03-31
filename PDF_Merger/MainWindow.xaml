@@ -7,13 +7,16 @@
         mc:Ignorable="d"
         Title="PDF Merger" Height="436" Width="1059" Icon="./Resources/PDF_Merger_icon.png">
 
+    
+    
     <DockPanel>
+        
         <StackPanel DockPanel.Dock="Left">
             <Button   Content="Open Files" Click="Explorer_Button_Click"  Width="250" Height="25"/>
             <Button   Content="Merge!" Click="MergePDF" Width="250" Height="25"/>
         </StackPanel>
 
-        <ListView x:Name="filelist">
+        <ListView x:Name="filelist" MouseDoubleClick="filelist_MouseDoubleClick">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Include" Width="80" DisplayMemberBinding="{Binding toMerge}" />
