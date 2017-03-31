@@ -16,6 +16,7 @@ using Microsoft.Win32;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.IO;
+using System.Diagnostics;
 
 namespace PDF_Merger
 {
@@ -49,9 +50,9 @@ namespace PDF_Merger
             }
         }
 
-         void CreateMergedPDF(object sender, RoutedEventArgs e)
+         void CreateMergedPDF(string pdfname,string endfloc)//ending file location 
         {
-            using (FileStream stream = new FileStream(finalpdf.Text+".pdf", FileMode.Create)) //finalpdf.Text is what the user typed in the appropriate field
+            using (FileStream stream = new FileStream(pdfname, FileMode.Create)) 
             {
                 Document pdfDoc = new Document(PageSize.A4);
                 PdfCopy pdf = new PdfCopy(pdfDoc, stream);
@@ -65,13 +66,33 @@ namespace PDF_Merger
 
                 if (pdfDoc != null)
                     pdfDoc.Close();
+
+                string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
+                File.Move(from, endfloc); //Move from .exe path to desired path
+                Process.Start(endfloc);
+            }
+
+
+        }
+
+        private void MergePDF(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog svFd = new SaveFileDialog();
+            svFd.FileName = "Merged.pdf";
+            svFd.Filter = "PDF File (*.pdf) |*.pdf";
+            svFd.Title = "Save file";
+            svFd.DefaultExt = ".pdf";
+            Nullable<bool> result = svFd.ShowDialog();
+
+
+            if (result == true)
+            {
+                CreateMergedPDF(System.IO.Path.GetFileName(svFd.FileName), svFd.FileName); //Send JUST the filename , and the actual path
             }
         }
-        
 
 
-
-    public class File_class //The class under which we save the files the user chooses
+        public class File_class //The class under which we save the files the user chooses
         {
             public bool toMerge { get; set; }
 
