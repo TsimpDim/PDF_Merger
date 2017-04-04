@@ -10,16 +10,6 @@ using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using System.Linq;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PDF_Merger
 {
@@ -115,15 +105,37 @@ namespace PDF_Merger
         }
 
 
+       
+
+        private void filelist_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            var clicked = filelist.SelectedIndex;
+
+            AddedPDFs[clicked].toMerge = !AddedPDFs[clicked].toMerge; //Change the property to the opposite (False to True and vv)
+  
+            
+        }
+
+
+        private void Show_Instructions(object sender, RoutedEventArgs e)
+        {
+            System.Windows.MessageBox.Show("1)Add the .pdf files you want to merge(Merge happens in the order you add them)\n\n2)Exclude any file you do not want to merge by double-clicking on it \n\n3)Hit Merge!", "Instructions");
+        }
+
+
+
+
+
         public class File_class : INotifyPropertyChanged //The class under which we save the files the user chooses
         {
             private bool _tomerge;
 
-            public bool toMerge {
-                get { return _tomerge;  }
+            public bool toMerge
+            {
+                get { return _tomerge; }
                 set
                 {
-                    if(value != toMerge)
+                    if (value != toMerge)
                     {
                         _tomerge = value;
                         NotifyPropertyChanged();
@@ -148,13 +160,6 @@ namespace PDF_Merger
             }
         }
 
-        private void filelist_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-        {
-            var clicked = filelist.SelectedIndex;
 
-            AddedPDFs[clicked].toMerge = !AddedPDFs[clicked].toMerge; //Change the property to the opposite (False to True and vv)
-  
-            
-        }
     }
 }
