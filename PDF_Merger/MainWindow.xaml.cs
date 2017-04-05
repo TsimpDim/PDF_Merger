@@ -10,6 +10,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows.Controls;
 
 namespace PDF_Merger
 {
@@ -20,6 +21,8 @@ namespace PDF_Merger
     {
         int i = 0;
         ObservableCollection<File_class> AddedPDFs = new ObservableCollection<File_class>(); //All the added PDFs are added here
+        bool open_file_after_merge,open_dir_after_merge;
+
 
         public MainWindow()
         {
@@ -44,7 +47,7 @@ namespace PDF_Merger
             filelist.ItemsSource = AddedPDFs; //Let the list grab the items from the Collection
         }
 
-         void CreateMergedPDF(string pdfname,string endfloc)//ending file location 
+        void CreateMergedPDF(string pdfname,string endfloc)//ending file location 
         {
             
             using (FileStream stream = new FileStream(pdfname, FileMode.Create)) 
@@ -70,7 +73,15 @@ namespace PDF_Merger
                     File.Delete(endfloc);
                 }
                 File.Move(from, endfloc); //Move from .exe path to desired path
-                Process.Start(System.IO.Path.GetDirectoryName(endfloc));
+
+                if (open_dir_after_merge)
+                    Process.Start(System.IO.Path.GetDirectoryName(endfloc));
+
+                if(open_file_after_merge)
+                    Process.Start(endfloc);
+
+                System.Windows.MessageBox.Show("Merge Complete","Done!");
+
             }
 
 
@@ -113,19 +124,52 @@ namespace PDF_Merger
 
             AddedPDFs[clicked].toMerge = !AddedPDFs[clicked].toMerge; //Change the property to the opposite (False to True and vv)
   
-            
         }
 
 
         private void Show_Instructions(object sender, RoutedEventArgs e)
         {
-            System.Windows.MessageBox.Show("1)Add the .pdf files you want to merge(Merge happens in the order you add them)\n\n2)Exclude any file you do not want to merge by double-clicking on it \n\n3)Hit Merge!", "Instructions");
+            System.Windows.MessageBox.Show("1)Add the .pdf files you want to merge (files are merged in the order you add them)\n\n2)Exclude any file you do not want to merge by double-clicking on it \n\n3)Hit Merge!", "Instructions");
+        }
+
+
+        //Checkboxes
+            //Open file after merge
+        private void CheckBox_Checked_file(object sender, RoutedEventArgs e)
+        {
+            Handler_file(sender as CheckBox);
+        }
+
+        private void CheckBox_Unchecked_file(object sender, RoutedEventArgs e)
+        {
+            Handler_file(sender as CheckBox);
+        }
+
+        private void Handler_file(CheckBox checkBox)
+        {
+            open_file_after_merge = checkBox.IsChecked.Value;
+        }
+            //Open directory after merge
+        private void CheckBox_Checked_dir(object sender, RoutedEventArgs e)
+        {
+            Handler_dir(sender as CheckBox);
+        }
+
+        private void CheckBox_Unchecked_dir(object sender, RoutedEventArgs e)
+        {
+            Handler_dir(sender as CheckBox);
+        }
+
+        private void Handler_dir(CheckBox checkBox)
+        {
+            open_dir_after_merge = checkBox.IsChecked.Value;
         }
 
 
 
 
 
+        //FILE CLASS
         public class File_class : INotifyPropertyChanged //The class under which we save the files the user chooses
         {
             private bool _tomerge;
@@ -159,7 +203,6 @@ namespace PDF_Merger
                 }
             }
         }
-
 
     }
 }

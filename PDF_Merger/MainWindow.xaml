@@ -18,8 +18,8 @@
 
             <StackPanel>
                 <Label Content="Options :" Margin="0 80 0 0"/>
-                <CheckBox Content="Open .pdf At Merge"/>
-                <CheckBox Content="Open .pdf Location At Merge"/>
+                <CheckBox Content="Open .pdf At Merge" Checked="CheckBox_Checked_file" Unchecked="CheckBox_Unchecked_file" />
+                <CheckBox Content="Open .pdf Location At Merge" Checked="CheckBox_Checked_dir" Unchecked="CheckBox_Unchecked_dir"/>
             </StackPanel>
            
 
