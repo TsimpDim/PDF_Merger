@@ -12,7 +12,7 @@ You can just download the .exe and the program should work flawlessly.
 
 Once you open the program you are met with a simple interface.On the left panel you can find instructions but also the main buttons. You first add the .PDFs you want to merge *in the order you want them to merge in*. After that you just press the "Merge!" button and select a name for the final .PDF as well as the save location. 
 
-You can select to either open the file/directory you saved the file from the checkboxes on the bottom left.
+You can select to either open the file/directory you saved the file from the checkboxes on the bottom left, and can choose to *not* include a file by double-clicking on it.
 
 ## Misc
 
