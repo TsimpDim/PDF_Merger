@@ -1,4 +1,4 @@
-# PDF_Merger_WPF
+# PDF_Merger
 
 ## What is this project about?
 
