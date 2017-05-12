@@ -6,7 +6,8 @@ I didn't like not being able to merge .PDFs without spending money or uploading 
 
 ## How do I install it?
 
-You can just download the .exe and the program should work flawlessly.
+You kinda can't right now :(
+~~You can just download the .exe and the program should work flawlessly.~~
 
 ## How do I use it?
 
