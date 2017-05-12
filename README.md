@@ -6,7 +6,7 @@ I didn't like not being able to merge .PDFs without spending money or uploading 
 
 ## How do I install it?
 
-Download the "Release" folder and run the .exe
+Run the .exe inside the "Release" folder.
 
 ## How do I use it?
 
