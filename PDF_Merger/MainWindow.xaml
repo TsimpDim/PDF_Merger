@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PDF_Merger"
         mc:Ignorable="d"
-        Title="PDF Merger" Height="436" Width="1059" Icon="./Resources/linea_239(0).ico">
+        Title="PDF Merger" Height="436" Width="1059" Icon="./Resources/PDF_Merger_icon.ico">
    
     
 
@@ -16,19 +16,29 @@
             <Button   Content="Open Files" Click="Explorer_Button_Click"  Width="250" Height="25" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF" Margin="0 1 0 0" />
             <Button   Content="Merge!" Click="MergePDF" Width="250" Height="25" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Background="White" BorderBrush="#FF4AA5FF" Margin="0 1 0 0"/>
 
+            <StackPanel HorizontalAlignment="Right" Margin="0 20">
+                <Button Width="50" Click="Move_Up"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF">
+                    <Image Height="20" Width="20" Source="./Resources/arrow-up.png"/>
+                </Button>
+                <Button Width="50" Click="Move_Down" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF">
+                    <Image Height="20" Width="20" Source="./Resources/arrow-down.png"/>
+                </Button>
+            </StackPanel>
+            
+            
+            
             <StackPanel>
                 <Label Content="Options :" Margin="0 80 0 0"/>
                 <CheckBox Content="Open .pdf At Merge" Checked="CheckBox_Checked_file" Unchecked="CheckBox_Unchecked_file" />
                 <CheckBox Content="Open .pdf Location At Merge" Checked="CheckBox_Checked_dir" Unchecked="CheckBox_Unchecked_dir"/>
             </StackPanel>
-           
 
 
         </StackPanel>
 
 
 
-
+        
         <ListView x:Name="filelist" MouseDoubleClick="filelist_MouseDoubleClick">
             <ListView.View>
                 <GridView>

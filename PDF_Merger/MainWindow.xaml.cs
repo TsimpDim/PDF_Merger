@@ -165,6 +165,52 @@ namespace PDF_Merger
             open_dir_after_merge = checkBox.IsChecked.Value;
         }
 
+        private void Move_Up(object sender, RoutedEventArgs e)//Move up pdf for insertion
+        {
+            var selectedIndex = filelist.SelectedIndex;
+
+            if (selectedIndex > 0)
+            {
+                var itemToMoveUp = AddedPDFs[selectedIndex];
+
+                
+               if (AddedPDFs[selectedIndex - 1].file_id < AddedPDFs[selectedIndex].file_id)
+                {
+                    int tmp = itemToMoveUp.file_id;
+                    itemToMoveUp.file_id = AddedPDFs[filelist.SelectedIndex - 1].file_id;
+                    AddedPDFs[filelist.SelectedIndex - 1].file_id = tmp;
+                }
+
+                AddedPDFs.RemoveAt(selectedIndex);
+                AddedPDFs.Insert(selectedIndex - 1, itemToMoveUp);
+
+                filelist.SelectedIndex = selectedIndex - 1;
+
+            }
+        }
+
+        private void Move_Down(object sender, RoutedEventArgs e)//Move down pdf for insertion
+        {
+            var selectedIndex = filelist.SelectedIndex;
+
+            if (selectedIndex + 1 < AddedPDFs.Count)
+            {
+                var itemToMoveDown = AddedPDFs[selectedIndex];
+
+
+                if (AddedPDFs[selectedIndex].file_id < AddedPDFs[selectedIndex + 1].file_id)
+                {
+                    int tmp = itemToMoveDown.file_id;
+                    itemToMoveDown.file_id = AddedPDFs[filelist.SelectedIndex + 1].file_id;
+                    AddedPDFs[filelist.SelectedIndex + 1].file_id = tmp;
+                }
+
+                AddedPDFs.RemoveAt(selectedIndex);
+                AddedPDFs.Insert(selectedIndex + 1, itemToMoveDown);
+                filelist.SelectedIndex = selectedIndex + 1;
+            }
+        }
+
 
 
 
@@ -189,7 +235,20 @@ namespace PDF_Merger
 
             }
 
-            public int file_id { get; set; }
+            private int _file_id;
+            public int file_id {
+                get { return _file_id; }
+                set {
+
+                    if(value != file_id)
+                    {
+                        _file_id = value;
+                        NotifyPropertyChanged();
+                    }
+                }
+
+            }
+                    
 
             public string file_path { get; set; }
 
