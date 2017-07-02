@@ -118,7 +118,7 @@ namespace PDF_Merger
 
        
 
-        private void filelist_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        private void ChangeInclusion(object sender, MouseButtonEventArgs e)
         {
             var clicked = filelist.SelectedIndex;
 
@@ -127,10 +127,6 @@ namespace PDF_Merger
         }
 
 
-        private void Show_Instructions(object sender, RoutedEventArgs e)
-        {
-            System.Windows.MessageBox.Show("1)Add the .pdf files you want to merge (files are merged in the order you add them)\n\n2)Exclude any file you do not want to merge by double-clicking on it \n\n3)Hit Merge!", "Instructions");
-        }
 
 
         //Checkboxes
@@ -174,13 +170,15 @@ namespace PDF_Merger
                 var itemToMoveUp = AddedPDFs[selectedIndex];
 
                 
-               if (AddedPDFs[selectedIndex - 1].file_id < AddedPDFs[selectedIndex].file_id)
+               /*Make sure the file_id's keep increasing order
+                
+                if (AddedPDFs[selectedIndex - 1].file_id < AddedPDFs[selectedIndex].file_id)
                 {
                     int tmp = itemToMoveUp.file_id;
                     itemToMoveUp.file_id = AddedPDFs[filelist.SelectedIndex - 1].file_id;
                     AddedPDFs[filelist.SelectedIndex - 1].file_id = tmp;
                 }
-
+                */
                 AddedPDFs.RemoveAt(selectedIndex);
                 AddedPDFs.Insert(selectedIndex - 1, itemToMoveUp);
 
@@ -198,13 +196,15 @@ namespace PDF_Merger
                 var itemToMoveDown = AddedPDFs[selectedIndex];
 
 
+                /*Make sure the file_id's keep increasing order
+                 
                 if (AddedPDFs[selectedIndex].file_id < AddedPDFs[selectedIndex + 1].file_id)
                 {
                     int tmp = itemToMoveDown.file_id;
                     itemToMoveDown.file_id = AddedPDFs[filelist.SelectedIndex + 1].file_id;
                     AddedPDFs[filelist.SelectedIndex + 1].file_id = tmp;
                 }
-
+                */
                 AddedPDFs.RemoveAt(selectedIndex);
                 AddedPDFs.Insert(selectedIndex + 1, itemToMoveDown);
                 filelist.SelectedIndex = selectedIndex + 1;
@@ -212,7 +212,29 @@ namespace PDF_Merger
         }
 
 
+        private void Delete_Button(object sender,RoutedEventArgs e)
+        {
+            DeleteFile();
+        }
 
+        private void DeleteShortcut(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Delete)
+            {
+                DeleteFile();
+            }
+        }
+
+        private void DeleteFile()
+        {
+            if (AddedPDFs.Count > 0)
+            {
+                AddedPDFs.RemoveAt(filelist.SelectedIndex);//Remove the item from the list
+                filelist.SelectedIndex += 1;//Select the next one
+            }
+        }
+
+        
 
 
         //FILE CLASS
