@@ -22,7 +22,7 @@ namespace PDF_Merger
         int i = 0;
         ObservableCollection<File_class> AddedPDFs = new ObservableCollection<File_class>(); //All the added PDFs are added here
         bool open_file_after_merge,open_dir_after_merge;
-
+        string pdfname,endfloc;
 
         public MainWindow()
         {
@@ -47,45 +47,7 @@ namespace PDF_Merger
             filelist.ItemsSource = AddedPDFs; //Let the list grab the items from the Collection
         }
 
-        void CreateMergedPDF(string pdfname,string endfloc)//ending file location 
-        {
-            
-            using (FileStream stream = new FileStream(pdfname, FileMode.Create)) 
-            {
-
-                Document pdfDoc = new Document(PageSize.A4);
-                PdfCopy pdf = new PdfCopy(pdfDoc, stream);
-                pdfDoc.Open();
-
-                foreach (File_class newpdf in AddedPDFs) { 
-                    if(newpdf.toMerge)
-                        pdf.AddDocument(new PdfReader(newpdf.file_path));
-                }
-
-
-                if (pdfDoc != null)
-                    pdfDoc.Close();
-
-                string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
-
-                if (File.Exists(endfloc))
-                {
-                    File.Delete(endfloc);
-                }
-                File.Move(from, endfloc); //Move from .exe path to desired path
-
-                if (open_dir_after_merge)
-                    Process.Start(System.IO.Path.GetDirectoryName(endfloc));
-
-                if(open_file_after_merge)
-                    Process.Start(endfloc);
-
-                System.Windows.MessageBox.Show("Merge Complete","Done!");
-
-            }
-
-
-        }
+      
 
         private void MergePDF(object sender, RoutedEventArgs e)
         {
@@ -111,12 +73,80 @@ namespace PDF_Merger
 
             if (result == true)
             {
-                CreateMergedPDF(System.IO.Path.GetFileName(svFd.FileName), svFd.FileName); //Send JUST the filename , and the actual path
+                progB.Maximum = AddedPDFs.Count - 1;
+                progBcont.Visibility = Visibility.Visible;
+
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.WorkerReportsProgress = true;
+                worker.DoWork += CreateMergedPdf;
+                worker.ProgressChanged += worker_ProgressChanged;
+                worker.RunWorkerAsync();
+
+                pdfname = System.IO.Path.GetFileName(svFd.FileName);
+                endfloc = svFd.FileName;
+                
+                //CreateMergedPDF(System.IO.Path.GetFileName(svFd.FileName), svFd.FileName); //Send JUST the filename , and the actual path
             }
         }
 
+        private void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            progB.Value = e.ProgressPercentage;
 
-       
+        }
+
+        private void CreateMergedPdf(object sender, DoWorkEventArgs e)
+        {
+            using (FileStream stream = new FileStream(pdfname, FileMode.Create))
+            {
+
+                Document pdfDoc = new Document(PageSize.A4);
+                PdfCopy pdf = new PdfCopy(pdfDoc, stream);
+                pdfDoc.Open();
+
+                int i = 0;
+                
+
+                foreach (File_class newpdf in AddedPDFs)
+                {
+                   
+                    
+
+                    (sender as BackgroundWorker).ReportProgress(i++);
+
+                    if (newpdf.toMerge)
+                    {
+                        pdf.AddDocument(new PdfReader(newpdf.file_path));
+                        this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
+
+                    }
+
+                   
+                }
+
+                
+                if (pdfDoc != null)
+                    pdfDoc.Close();
+
+                string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
+
+                if (File.Exists(endfloc))
+                {
+                    File.Delete(endfloc);
+                }
+                File.Move(from, endfloc); //Move from .exe path to desired path
+
+                if (open_dir_after_merge)
+                    Process.Start(System.IO.Path.GetDirectoryName(endfloc));
+
+                if (open_file_after_merge)
+                    Process.Start(endfloc);
+
+                this.Dispatcher.Invoke(() => progBtxt.Text = "Merge complete");
+                System.Windows.MessageBox.Show("Merge Complete", "Done!");
+
+            }
+        }
 
         private void ChangeInclusion(object sender, MouseButtonEventArgs e)
         {
@@ -241,6 +271,7 @@ namespace PDF_Merger
         public class File_class : INotifyPropertyChanged //The class under which we save the files the user chooses
         {
             private bool _tomerge;
+            private int _file_id;
 
             public bool toMerge
             {
@@ -257,7 +288,6 @@ namespace PDF_Merger
 
             }
 
-            private int _file_id;
             public int file_id {
                 get { return _file_id; }
                 set {

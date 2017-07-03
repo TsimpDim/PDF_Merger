@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PDF_Merger"
         mc:Ignorable="d"
-        Title="PDF Merger" Height="436" Width="1059" Icon="./Resources/PDF_Merger_icon_3.png">
+        Title="PDF Merger" Height="450" Width="900" Icon="/Resources/PDF_Merger_icon_3.png">
 
 
     <DockPanel>
@@ -16,29 +16,32 @@
 
             <StackPanel HorizontalAlignment="Right" Margin="0 20">
                 <Button Width="50" Click="Move_Up"  Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF">
-                    <Image Height="20" Width="20" Source="./Resources/arrow-up.png"/>
+                    <Image Height="20" Width="20" Source="/Resources/arrow-up.png"/>
                 </Button>
                 <Button Width="50" Click="Move_Down" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF">
-                    <Image Height="20" Width="20" Source="./Resources/arrow-down.png"/>
+                    <Image Height="20" Width="20" Source="/Resources/arrow-down.png"/>
                 </Button>
                 <Button Width="50" Click="Delete_Button" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF">
-                    <Image Height="20" Width="20" Source="./Resources/delete.png"/>
+                    <Image Height="20" Width="20" Source="/Resources/delete.png"/>
                 </Button>
             </StackPanel>
-            
-            
-            
-            <StackPanel>
+
+
+            <StackPanel DockPanel.Dock="Top" Height="199">
                 <Label Content="Options :" Margin="0 80 0 0"/>
                 <CheckBox Content="Open .pdf At Merge" Checked="CheckBox_Checked_file" Unchecked="CheckBox_Unchecked_file" />
                 <CheckBox Content="Open .pdf Location At Merge" Checked="CheckBox_Checked_dir" Unchecked="CheckBox_Unchecked_dir"/>
             </StackPanel>
 
+            <StackPanel  VerticalAlignment="Bottom" Name="progBcont" Margin="0 6" Visibility="Hidden">
+                <TextBlock x:Name="progBtxt"/>
+                <ProgressBar Minimum="0" Height="20" Width="auto" x:Name="progB"/>
+            </StackPanel>
 
         </StackPanel>
 
 
-        <ListView x:Name="filelist" MouseDoubleClick="ChangeInclusion" KeyDown="DeleteShortcut">
+        <ListView DockPanel.Dock="Right" x:Name="filelist" MouseDoubleClick="ChangeInclusion" KeyDown="DeleteShortcut">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Include" Width="80" DisplayMemberBinding="{Binding toMerge}" />
@@ -46,8 +49,8 @@
                     <GridViewColumn Header="Path\File" Width="auto" DisplayMemberBinding="{Binding file_path}"/>
                 </GridView>
             </ListView.View>
-            
-    
+
+
             <ListView.Resources>
                 <Style TargetType="{x:Type ListViewItem}">
                     <Style.Triggers>
