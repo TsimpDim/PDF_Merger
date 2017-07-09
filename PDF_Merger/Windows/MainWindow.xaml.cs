@@ -21,8 +21,8 @@ namespace PDF_Merger
     {
         int i = 0;
         ObservableCollection<File_class> AddedPDFs = new ObservableCollection<File_class>(); //All the added PDFs are added here
-        bool open_file_after_merge,open_dir_after_merge;
-        string pdfname,endfloc;
+        bool open_file_after_merge, open_dir_after_merge;
+        string pdfname, endfloc;
 
         public MainWindow()
         {
@@ -47,7 +47,7 @@ namespace PDF_Merger
             filelist.ItemsSource = AddedPDFs; //Let the list grab the items from the Collection
         }
 
-      
+
 
         private void MergePDF(object sender, RoutedEventArgs e)
         {
@@ -76,16 +76,16 @@ namespace PDF_Merger
                 progB.Maximum = AddedPDFs.Count - 1;
                 progBcont.Visibility = Visibility.Visible;
 
+                pdfname = System.IO.Path.GetFileName(svFd.FileName);
+                endfloc = svFd.FileName;
+               
                 BackgroundWorker worker = new BackgroundWorker();
-                worker.WorkerReportsProgress = true;
+                worker.WorkerReportsProgress = true;     
                 worker.DoWork += CreateMergedPdf;
                 worker.ProgressChanged += worker_ProgressChanged;
                 worker.RunWorkerAsync();
 
-                pdfname = System.IO.Path.GetFileName(svFd.FileName);
-                endfloc = svFd.FileName;
-                
-                //CreateMergedPDF(System.IO.Path.GetFileName(svFd.FileName), svFd.FileName); //Send JUST the filename , and the actual path
+
             }
         }
 
@@ -105,26 +105,22 @@ namespace PDF_Merger
                 pdfDoc.Open();
 
                 int i = 0;
-                
+
 
                 foreach (File_class newpdf in AddedPDFs)
                 {
-                   
-                    
-
                     (sender as BackgroundWorker).ReportProgress(i++);
 
                     if (newpdf.toMerge)
                     {
                         pdf.AddDocument(new PdfReader(newpdf.file_path));
                         this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
-
                     }
 
-                   
+
                 }
 
-                
+
                 if (pdfDoc != null)
                     pdfDoc.Close();
 
@@ -153,14 +149,14 @@ namespace PDF_Merger
             var clicked = filelist.SelectedIndex;
 
             AddedPDFs[clicked].toMerge = !AddedPDFs[clicked].toMerge; //Change the property to the opposite (False to True and vv)
-  
+
         }
 
 
 
 
         //Checkboxes
-            //Open file after merge
+        //Open file after merge
         private void CheckBox_Checked_file(object sender, RoutedEventArgs e)
         {
             Handler_file(sender as CheckBox);
@@ -175,7 +171,7 @@ namespace PDF_Merger
         {
             open_file_after_merge = checkBox.IsChecked.Value;
         }
-            //Open directory after merge
+        //Open directory after merge
         private void CheckBox_Checked_dir(object sender, RoutedEventArgs e)
         {
             Handler_dir(sender as CheckBox);
@@ -199,16 +195,16 @@ namespace PDF_Merger
             {
                 var itemToMoveUp = AddedPDFs[selectedIndex];
 
-                
-               /*Make sure the file_id's keep increasing order
-                
-                if (AddedPDFs[selectedIndex - 1].file_id < AddedPDFs[selectedIndex].file_id)
-                {
-                    int tmp = itemToMoveUp.file_id;
-                    itemToMoveUp.file_id = AddedPDFs[filelist.SelectedIndex - 1].file_id;
-                    AddedPDFs[filelist.SelectedIndex - 1].file_id = tmp;
-                }
-                */
+
+                /*Make sure the file_id's keep increasing order
+
+                 if (AddedPDFs[selectedIndex - 1].file_id < AddedPDFs[selectedIndex].file_id)
+                 {
+                     int tmp = itemToMoveUp.file_id;
+                     itemToMoveUp.file_id = AddedPDFs[filelist.SelectedIndex - 1].file_id;
+                     AddedPDFs[filelist.SelectedIndex - 1].file_id = tmp;
+                 }
+                 */
                 AddedPDFs.RemoveAt(selectedIndex);
                 AddedPDFs.Insert(selectedIndex - 1, itemToMoveUp);
 
@@ -242,7 +238,7 @@ namespace PDF_Merger
         }
 
 
-        private void Delete_Button(object sender,RoutedEventArgs e)
+        private void Delete_Button(object sender, RoutedEventArgs e)
         {
             DeleteFile();
         }
@@ -264,7 +260,7 @@ namespace PDF_Merger
             }
         }
 
-        
+
 
 
         //FILE CLASS
@@ -288,11 +284,13 @@ namespace PDF_Merger
 
             }
 
-            public int file_id {
+            public int file_id
+            {
                 get { return _file_id; }
-                set {
+                set
+                {
 
-                    if(value != file_id)
+                    if (value != file_id)
                     {
                         _file_id = value;
                         NotifyPropertyChanged();
@@ -300,7 +298,7 @@ namespace PDF_Merger
                 }
 
             }
-                    
+
 
             public string file_path { get; set; }
 
