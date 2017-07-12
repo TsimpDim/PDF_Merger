@@ -110,7 +110,6 @@ namespace PDF_Merger
 
                 foreach (File_class newpdf in AddedPDFs)
                 {
-
                     (sender as BackgroundWorker).ReportProgress(i++);
 
                     if (newpdf.toMerge)
@@ -127,10 +126,11 @@ namespace PDF_Merger
                         pdf.AddDocument(reader);
                         this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
 
-                        if (add_wtrmk)
+                        if (add_wtrmk)//This is called for every FILE
                         {
-                            AddWatermark(reader, stream, i);
+                            AddWatermark(reader, stream);
                         }
+
                     }
                 }
 
@@ -167,38 +167,52 @@ namespace PDF_Merger
         }
 
 
-        private void AddWatermark(PdfReader reader, FileStream stream,int i)
+        private void AddWatermark(PdfReader reader, FileStream stream)
         {
-            using (PdfStamper pdfStamper = new PdfStamper(reader, stream))
+            using (PdfStamper pdfStamper = new PdfStamper(reader, stream))//This is called for every PAGE of the file
             {
+                for (int pgIndex = 1; pgIndex <= reader.NumberOfPages; pgIndex++)
+                {
+                    Rectangle pageRectangle = reader.GetPageSizeWithRotation(pgIndex);
 
-                //Rectangle class in iText represent geomatric representation... in this case, rectanle object would contain page geomatry
-                Rectangle pageRectangle = reader.GetPageSizeWithRotation(i);
-                //pdfcontentbyte object contains graphics and text content of page returned by pdfstamper
-                PdfContentByte pdfData;
-                if (this.Dispatcher.Invoke( () =>dropdown.SelectedItem.ToString() == "Under Content") )
-                {
-                    pdfData = pdfStamper.GetUnderContent(i);
+                   
+                    PdfContentByte pdfData; //Contains graphics and text content of page returned by pdfstamper
+                    if (this.Dispatcher.Invoke(() => dropdown.Text == "Under Content"))
+                    {
+                        pdfData = pdfStamper.GetUnderContent(pgIndex);
+                    }
+                    else if (this.Dispatcher.Invoke(() => dropdown.Text == "Over Content"))
+                    {
+                        pdfData = pdfStamper.GetOverContent(pgIndex);
+                    }
+                    else//Just in case
+
+                    {
+                        MessageBox.Show("Something went wrong when adding the watermark");
+                        return;
+                    }
+
+
+                    //Set font
+                    pdfData.SetFontAndSize(BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 40);
+
+                    //Create new graphics state and assign opacity
+                    PdfGState graphicsState = new PdfGState();
+                    graphicsState.FillOpacity = 0.2F;
+
+                    //Set graphics state to pdfcontentbyte
+                    pdfData.SetGState(graphicsState);
+
+                    //Color of watermark
+                    pdfData.SetColorFill(BaseColor.GRAY);
+
+                    pdfData.BeginText();
+
+                    //Show text as per position and rotation
+                    this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text, pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
+
+                    pdfData.EndText();
                 }
-                else
-                {
-                    pdfData = pdfStamper.GetOverContent(i);
-                }
-                //create fontsize for watermark
-                pdfData.SetFontAndSize(BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 40);
-                //create new graphics state and assign opacity
-                PdfGState graphicsState = new PdfGState();
-                graphicsState.FillOpacity = 0.2F;
-                //set graphics state to pdfcontentbyte
-                pdfData.SetGState(graphicsState);
-                //set color of watermark
-                pdfData.SetColorFill(BaseColor.LIGHT_GRAY);
-                //indicates start of writing of text
-                pdfData.BeginText();
-                //show text as per position and rotation
-                this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text , pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
-                //call endText to invalid font set
-                pdfData.EndText();
             }
         }
 
