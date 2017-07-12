@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Controls;
+using System.Threading;
 
 namespace PDF_Merger
 {
@@ -21,7 +22,7 @@ namespace PDF_Merger
     {
         int i = 0;
         ObservableCollection<File_class> AddedPDFs = new ObservableCollection<File_class>(); //All the added PDFs are added here
-        bool open_file_after_merge, open_dir_after_merge;
+        bool open_file_after_merge, open_dir_after_merge, add_wtrmk;
         string pdfname, endfloc;
 
         public MainWindow()
@@ -73,19 +74,19 @@ namespace PDF_Merger
 
             if (result == true)
             {
-                progB.Maximum = AddedPDFs.Count - 1;
+                progB.Maximum = AddedPDFs.Count - 1; //Count - 1 for the pdfs
                 progBcont.Visibility = Visibility.Visible;
 
-                pdfname = System.IO.Path.GetFileName(svFd.FileName);
-                endfloc = svFd.FileName;
-               
                 BackgroundWorker worker = new BackgroundWorker();
-                worker.WorkerReportsProgress = true;     
+                worker.WorkerReportsProgress = true;
                 worker.DoWork += CreateMergedPdf;
                 worker.ProgressChanged += worker_ProgressChanged;
                 worker.RunWorkerAsync();
 
+                pdfname = System.IO.Path.GetFileName(svFd.FileName);
+                endfloc = svFd.FileName;
 
+                //CreateMergedPDF(System.IO.Path.GetFileName(svFd.FileName), svFd.FileName); //Send JUST the filename , and the actual path
             }
         }
 
@@ -109,39 +110,120 @@ namespace PDF_Merger
 
                 foreach (File_class newpdf in AddedPDFs)
                 {
+
                     (sender as BackgroundWorker).ReportProgress(i++);
 
                     if (newpdf.toMerge)
                     {
-                        pdf.AddDocument(new PdfReader(newpdf.file_path));
+
+                        /*if (IsFileinUse(new FileInfo(newpdf.file_path)))
+                        {
+                            MessageBox.Show("Something went wrong with file #" + newpdf.file_id + "." + "\nIt is already in use");
+                            return;
+                        }*/
+
+                        PdfReader reader = new PdfReader(newpdf.file_path);
+
+                        pdf.AddDocument(reader);
                         this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
+
+                        if (add_wtrmk)
+                        {
+                            AddWatermark(reader, stream, i);
+                        }
                     }
-
-
                 }
 
 
-                if (pdfDoc != null)
-                    pdfDoc.Close();
 
                 string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
 
+                this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
                 if (File.Exists(endfloc))
                 {
                     File.Delete(endfloc);
                 }
                 File.Move(from, endfloc); //Move from .exe path to desired path
+                (sender as BackgroundWorker).ReportProgress(i++);
 
-                if (open_dir_after_merge)
-                    Process.Start(System.IO.Path.GetDirectoryName(endfloc));
 
-                if (open_file_after_merge)
-                    Process.Start(endfloc);
+            }//End of stream
 
-                this.Dispatcher.Invoke(() => progBtxt.Text = "Merge complete");
-                System.Windows.MessageBox.Show("Merge Complete", "Done!");
 
+            if (open_dir_after_merge)
+            {
+                Process.Start(System.IO.Path.GetDirectoryName(endfloc));
             }
+
+            if (open_file_after_merge)
+            {
+                Process.Start(endfloc);
+            }
+
+            this.Dispatcher.Invoke(() => progBtxt.Text = "Merge complete");
+            System.Windows.MessageBox.Show("Merge Complete", "Done!");
+
+
+        }
+
+
+        private void AddWatermark(PdfReader reader, FileStream stream,int i)
+        {
+            using (PdfStamper pdfStamper = new PdfStamper(reader, stream))
+            {
+
+                //Rectangle class in iText represent geomatric representation... in this case, rectanle object would contain page geomatry
+                Rectangle pageRectangle = reader.GetPageSizeWithRotation(i);
+                //pdfcontentbyte object contains graphics and text content of page returned by pdfstamper
+                PdfContentByte pdfData;
+                if (this.Dispatcher.Invoke( () =>dropdown.SelectedItem.ToString() == "Under Content") )
+                {
+                    pdfData = pdfStamper.GetUnderContent(i);
+                }
+                else
+                {
+                    pdfData = pdfStamper.GetOverContent(i);
+                }
+                //create fontsize for watermark
+                pdfData.SetFontAndSize(BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 40);
+                //create new graphics state and assign opacity
+                PdfGState graphicsState = new PdfGState();
+                graphicsState.FillOpacity = 0.2F;
+                //set graphics state to pdfcontentbyte
+                pdfData.SetGState(graphicsState);
+                //set color of watermark
+                pdfData.SetColorFill(BaseColor.LIGHT_GRAY);
+                //indicates start of writing of text
+                pdfData.BeginText();
+                //show text as per position and rotation
+                this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text , pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
+                //call endText to invalid font set
+                pdfData.EndText();
+            }
+        }
+
+        protected virtual bool IsFileinUse(FileInfo file)
+        {
+            FileStream stream = null;
+
+            try
+            {
+                stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
+            finally
+            {
+                if (stream != null)
+                    stream.Close();
+            }
+            return false;
         }
 
         private void ChangeInclusion(object sender, MouseButtonEventArgs e)
@@ -151,7 +233,6 @@ namespace PDF_Merger
             AddedPDFs[clicked].toMerge = !AddedPDFs[clicked].toMerge; //Change the property to the opposite (False to True and vv)
 
         }
-
 
 
 
@@ -186,6 +267,30 @@ namespace PDF_Merger
         {
             open_dir_after_merge = checkBox.IsChecked.Value;
         }
+
+        //Add watermark to file
+        private void CheckBox_Unchecked_wtrmk(object sender, RoutedEventArgs e)
+        {
+            Handler_wtrmk(sender as CheckBox);
+
+            WtrmkTextbox.Visibility = Visibility.Hidden;
+            dropdown.Visibility = Visibility.Hidden;
+        }
+
+        private void CheckBox_Checked_wtrmk(object sender, RoutedEventArgs e)
+        {
+            Handler_wtrmk(sender as CheckBox);
+
+            WtrmkTextbox.Visibility = Visibility.Visible;
+            dropdown.Visibility = Visibility.Visible;
+
+        }
+
+        private void Handler_wtrmk(CheckBox checkBox)
+        {
+            add_wtrmk = checkBox.IsChecked.Value;
+        }
+
 
         private void Move_Up(object sender, RoutedEventArgs e)//Move up pdf for insertion
         {
@@ -250,6 +355,8 @@ namespace PDF_Merger
                 DeleteFile();
             }
         }
+
+
 
         private void DeleteFile()
         {
