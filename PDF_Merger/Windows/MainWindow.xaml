@@ -32,6 +32,14 @@
                 <Label Content="Options :" Margin="0 80 0 0"/>
                 <CheckBox Content="Open .pdf At Merge" Checked="CheckBox_Checked_file" Unchecked="CheckBox_Unchecked_file" />
                 <CheckBox Content="Open .pdf Location At Merge" Checked="CheckBox_Checked_dir" Unchecked="CheckBox_Unchecked_dir"/>
+                <CheckBox Content="Add Watermark" Checked="CheckBox_Checked_wtrmk" Unchecked="CheckBox_Unchecked_wtrmk"/>
+                <TextBox Name="WtrmkTextbox" Visibility="Hidden">Watermark</TextBox>
+                <ComboBox Name="dropdown" Visibility="Hidden" Background="#FFC7C7C7" BorderBrush="#FF595757">
+                    <ComboBoxItem  IsSelected="True">Under Content</ComboBoxItem>
+                    <ComboBoxItem>Over Content</ComboBoxItem>
+
+                </ComboBox>
+
             </StackPanel>
 
             <StackPanel  VerticalAlignment="Bottom" Name="progBcont" Margin="0 6" Visibility="Hidden">
