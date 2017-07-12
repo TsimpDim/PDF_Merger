@@ -77,14 +77,16 @@ namespace PDF_Merger
                 progB.Maximum = AddedPDFs.Count - 1; //Count - 1 for the pdfs
                 progBcont.Visibility = Visibility.Visible;
 
+                pdfname = System.IO.Path.GetFileName(svFd.FileName);
+                endfloc = svFd.FileName;
+
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
                 worker.DoWork += CreateMergedPdf;
                 worker.ProgressChanged += worker_ProgressChanged;
                 worker.RunWorkerAsync();
 
-                pdfname = System.IO.Path.GetFileName(svFd.FileName);
-                endfloc = svFd.FileName;
+        
 
             }
         }
