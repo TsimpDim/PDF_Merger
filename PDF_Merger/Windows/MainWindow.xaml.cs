@@ -110,27 +110,16 @@ namespace PDF_Merger
 
                 foreach (File_class newpdf in AddedPDFs)
                 {
-
                     (sender as BackgroundWorker).ReportProgress(i++);
 
                     if (newpdf.toMerge)
                     {
-
-                        /*if (IsFileinUse(new FileInfo(newpdf.file_path)))
-                        {
-                            MessageBox.Show("Something went wrong with file #" + newpdf.file_id + "." + "\nIt is already in use");
-                            return;
-                        }*/
 
                         PdfReader reader = new PdfReader(newpdf.file_path);
 
                         pdf.AddDocument(reader);
                         this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
 
-                        if (add_wtrmk)
-                        {
-                            AddWatermark(reader, stream, i);
-                        }
                     }
                 }
 
@@ -139,6 +128,9 @@ namespace PDF_Merger
                 string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
 
                 this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
+                if (pdfDoc != null)
+                    pdfDoc.Close();
+
                 if (File.Exists(endfloc))
                 {
                     File.Delete(endfloc);
@@ -167,64 +159,6 @@ namespace PDF_Merger
         }
 
 
-        private void AddWatermark(PdfReader reader, FileStream stream,int i)
-        {
-            using (PdfStamper pdfStamper = new PdfStamper(reader, stream))
-            {
-
-                //Rectangle class in iText represent geomatric representation... in this case, rectanle object would contain page geomatry
-                Rectangle pageRectangle = reader.GetPageSizeWithRotation(i);
-                //pdfcontentbyte object contains graphics and text content of page returned by pdfstamper
-                PdfContentByte pdfData;
-                if (this.Dispatcher.Invoke( () =>dropdown.SelectedItem.ToString() == "Under Content") )
-                {
-                    pdfData = pdfStamper.GetUnderContent(i);
-                }
-                else
-                {
-                    pdfData = pdfStamper.GetOverContent(i);
-                }
-                //create fontsize for watermark
-                pdfData.SetFontAndSize(BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 40);
-                //create new graphics state and assign opacity
-                PdfGState graphicsState = new PdfGState();
-                graphicsState.FillOpacity = 0.2F;
-                //set graphics state to pdfcontentbyte
-                pdfData.SetGState(graphicsState);
-                //set color of watermark
-                pdfData.SetColorFill(BaseColor.LIGHT_GRAY);
-                //indicates start of writing of text
-                pdfData.BeginText();
-                //show text as per position and rotation
-                this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text , pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
-                //call endText to invalid font set
-                pdfData.EndText();
-            }
-        }
-
-        protected virtual bool IsFileinUse(FileInfo file)
-        {
-            FileStream stream = null;
-
-            try
-            {
-                stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (IOException)
-            {
-                //the file is unavailable because it is:
-                //still being written to
-                //or being processed by another thread
-                //or does not exist (has already been processed)
-                return true;
-            }
-            finally
-            {
-                if (stream != null)
-                    stream.Close();
-            }
-            return false;
-        }
 
         private void ChangeInclusion(object sender, MouseButtonEventArgs e)
         {
@@ -266,29 +200,6 @@ namespace PDF_Merger
         private void Handler_dir(CheckBox checkBox)
         {
             open_dir_after_merge = checkBox.IsChecked.Value;
-        }
-
-        //Add watermark to file
-        private void CheckBox_Unchecked_wtrmk(object sender, RoutedEventArgs e)
-        {
-            Handler_wtrmk(sender as CheckBox);
-
-            WtrmkTextbox.Visibility = Visibility.Hidden;
-            dropdown.Visibility = Visibility.Hidden;
-        }
-
-        private void CheckBox_Checked_wtrmk(object sender, RoutedEventArgs e)
-        {
-            Handler_wtrmk(sender as CheckBox);
-
-            WtrmkTextbox.Visibility = Visibility.Visible;
-            dropdown.Visibility = Visibility.Visible;
-
-        }
-
-        private void Handler_wtrmk(CheckBox checkBox)
-        {
-            add_wtrmk = checkBox.IsChecked.Value;
         }
 
 
