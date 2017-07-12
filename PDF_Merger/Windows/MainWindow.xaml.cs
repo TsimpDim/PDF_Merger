@@ -77,16 +77,15 @@ namespace PDF_Merger
                 progB.Maximum = AddedPDFs.Count - 1; //Count - 1 for the pdfs
                 progBcont.Visibility = Visibility.Visible;
 
+                pdfname = System.IO.Path.GetFileName(svFd.FileName);
+                endfloc = svFd.FileName;
+
                 BackgroundWorker worker = new BackgroundWorker();
                 worker.WorkerReportsProgress = true;
                 worker.DoWork += CreateMergedPdf;
                 worker.ProgressChanged += worker_ProgressChanged;
                 worker.RunWorkerAsync();
 
-                pdfname = System.IO.Path.GetFileName(svFd.FileName);
-                endfloc = svFd.FileName;
-
-                //CreateMergedPDF(System.IO.Path.GetFileName(svFd.FileName), svFd.FileName); //Send JUST the filename , and the actual path
             }
         }
 
@@ -103,8 +102,8 @@ namespace PDF_Merger
 
                 Document pdfDoc = new Document(PageSize.A4);
                 PdfCopy pdf = new PdfCopy(pdfDoc, stream);
-                pdfDoc.Open();
 
+                pdfDoc.Open();
                 int i = 0;
 
 
@@ -115,13 +114,8 @@ namespace PDF_Merger
                     if (newpdf.toMerge)
                     {
 
-                        /*if (IsFileinUse(new FileInfo(newpdf.file_path)))
-                        {
-                            MessageBox.Show("Something went wrong with file #" + newpdf.file_id + "." + "\nIt is already in use");
-                            return;
-                        }*/
-
                         PdfReader reader = new PdfReader(newpdf.file_path);
+                        
 
                         pdf.AddDocument(reader);
                         this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
@@ -131,6 +125,7 @@ namespace PDF_Merger
                             AddWatermark(reader, stream);
                         }
 
+                        
                     }
                 }
 
@@ -174,8 +169,8 @@ namespace PDF_Merger
 
         private void AddWatermark(PdfReader reader, FileStream stream)
         {
-            using (PdfStamper pdfStamper = new PdfStamper(reader, stream))//This is called for every PAGE of the file
-            {
+            PdfStamper pdfStamper = new PdfStamper(reader, stream);//This is called for every PAGE of the file
+           
                 for (int pgIndex = 1; pgIndex <= reader.NumberOfPages; pgIndex++)
                 {
                     Rectangle pageRectangle = reader.GetPageSizeWithRotation(pgIndex);
@@ -217,33 +212,10 @@ namespace PDF_Merger
                     this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text, pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
 
                     pdfData.EndText();
-                }
+                    pdfStamper.Close();
             }
         }
 
-        protected virtual bool IsFileinUse(FileInfo file)
-        {
-            FileStream stream = null;
-
-            try
-            {
-                stream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (IOException)
-            {
-                //the file is unavailable because it is:
-                //still being written to
-                //or being processed by another thread
-                //or does not exist (has already been processed)
-                return true;
-            }
-            finally
-            {
-                if (stream != null)
-                    stream.Close();
-            }
-            return false;
-        }
 
         private void ChangeInclusion(object sender, MouseButtonEventArgs e)
         {
