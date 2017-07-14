@@ -140,14 +140,14 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\arrow-up.png" />
-    <Resource Include="Resources\arrow-down.png" />
+    <Resource Include="Resources\Triangle_DOWN_512.png" />
+    <Resource Include="Resources\Triangle_UP_512.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\delete.png" />
+    <Resource Include="Resources\X_512.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Resources\PDF_Merger_icon_3.png" />
+    <Resource Include="Resources\PDF_Merger_Icon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

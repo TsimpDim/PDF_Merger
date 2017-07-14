@@ -97,63 +97,67 @@ namespace PDF_Merger
 
         private void CreateMergedPdf(object sender, DoWorkEventArgs e)
         {
-            using (FileStream stream = new FileStream(pdfname, FileMode.Create))
-            {
+           FileStream stream = new FileStream(pdfname, FileMode.Create);
+            
 
                 Document pdfDoc = new Document(PageSize.A4);
-                
+
                 PdfCopy pdf = new PdfCopy(pdfDoc, stream);
 
-                    pdfDoc.Open();
-                    int i = 0;
+                pdfDoc.Open();
+                int i = -1;
 
 
                 foreach (File_class newpdf in AddedPDFs)
                 {
-                    (sender as BackgroundWorker).ReportProgress(i++);
+                    (sender as BackgroundWorker).ReportProgress(++i);
 
                     if (newpdf.toMerge)
                     {
-                        using (PdfReader reader = new PdfReader(newpdf.file_path))
+                        PdfReader reader = new PdfReader(newpdf.file_path);
+
+                        try
                         {
-                            try
-                            {
-                                pdf.AddDocument(reader);
-                            }
-                            catch
-                            {
-
-                            }
-                            this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
-
-                            if (add_wtrmk)//This is called for every FILE
-                            {
-                                AddWatermark(reader, stream);
-                            }
-
+                            pdf.AddDocument(reader);
+                        }
+                        catch
+                        {
 
                         }
+                        this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
+
+                        if (add_wtrmk)//This is called for every FILE
+                        {
+                            AddWatermark(reader, stream);
+                        }
+
+
+
                     }
 
 
 
 
                 }
+            
                 string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
 
                 this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
 
+            if (pdfDoc.IsOpen())
+            {
+                pdfDoc.Close();
+            }
 
-                if (File.Exists(endfloc))
-                {
-                    File.Delete(endfloc);
-                }
-
+            if (File.Exists(endfloc))
+            {
+                File.Delete(endfloc);
+            }
+                
                 File.Move(from, endfloc); //Move from .exe path to desired path
                 (sender as BackgroundWorker).ReportProgress(i++);
 
-            }//End of stream
-
+           
 
             if (open_dir_after_merge)
             {
@@ -177,11 +181,11 @@ namespace PDF_Merger
             try
             {
 
-         
-                using (PdfStamper pdfStamper = new PdfStamper(reader, stream))//This is called for every PAGE of the file
-                 {
 
-                    for (int pgIndex = 1; pgIndex <= reader.NumberOfPages; pgIndex++)
+                PdfStamper pdfStamper = new PdfStamper(reader, stream);//This is called for every PAGE of the file
+
+
+                    for (int pgIndex = 1; pgIndex <= reader.NumberOfPages; pgIndex++) 
                     {
                         Rectangle pageRectangle = reader.GetPageSizeWithRotation(pgIndex);
 
@@ -222,7 +226,6 @@ namespace PDF_Merger
 
                         pdfData.EndText();
                     }
-                }
             }
             catch
             {
@@ -230,6 +233,10 @@ namespace PDF_Merger
             }
         }
 
+        private static PdfStamper GetPdfStamper(PdfReader reader, FileStream stream)
+        {
+            return new PdfStamper(reader, stream);
+        }
 
         private void ChangeInclusion(object sender, MouseButtonEventArgs e)
         {
