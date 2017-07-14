@@ -144,7 +144,7 @@ namespace PDF_Merger
 
                 this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
 
-            if (pdfDoc.IsOpen())
+            if (pdfDoc.IsOpen() && !add_wtrmk)
             {
                 pdfDoc.Close();
             }
@@ -181,51 +181,39 @@ namespace PDF_Merger
             try
             {
 
+                PdfStamper PDFStamper = new PdfStamper(reader, stream);
 
-                PdfStamper pdfStamper = new PdfStamper(reader, stream);//This is called for every PAGE of the file
+                for (int pgIndex = 1; pgIndex <= PDFStamper.Reader.NumberOfPages; pgIndex++)
+                {
+                    Rectangle pageRectangle = reader.GetPageSizeWithRotation(pgIndex);
+                    PdfContentByte PdfData = null;
 
-
-                    for (int pgIndex = 1; pgIndex <= reader.NumberOfPages; pgIndex++) 
+                    if (this.Dispatcher.Invoke(() => dropdown.Text == "Over Content"))
                     {
-                        Rectangle pageRectangle = reader.GetPageSizeWithRotation(pgIndex);
-
-
-                        PdfContentByte pdfData; //Contains graphics and text content of page returned by pdfstamper
-                        if (this.Dispatcher.Invoke(() => dropdown.Text == "Under Content"))
-                        {
-                            pdfData = pdfStamper.GetUnderContent(pgIndex);
-                        }
-                        else if (this.Dispatcher.Invoke(() => dropdown.Text == "Over Content"))
-                        {
-                            pdfData = pdfStamper.GetOverContent(pgIndex);
-                        }
-                        else//Just in case
-                        {
-                            MessageBox.Show("Something went wrong when adding the watermark");
-                            return;
-                        }
-
-
-                        //Set font
-                        pdfData.SetFontAndSize(BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 40);
-
-                        //Create new graphics state and assign opacity
-                        PdfGState graphicsState = new PdfGState();
-                        graphicsState.FillOpacity = 0.2F;
-
-                        //Set graphics state to pdfcontentbyte
-                        pdfData.SetGState(graphicsState);
-
-                        //Color of watermark
-                        pdfData.SetColorFill(BaseColor.GRAY);
-
-                        pdfData.BeginText();
-
-                        //Show text as per position and rotation
-                        this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text, pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
-
-                        pdfData.EndText();
+                        PdfData = PDFStamper.GetOverContent(pgIndex);
                     }
+                    else
+                    {
+                       PdfData = PDFStamper.GetUnderContent(pgIndex);
+                    }
+
+                    BaseFont baseFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
+                    PdfGState graphicsState = new PdfGState();
+                    graphicsState.FillOpacity = 0.35F;
+
+                    PdfData.SetGState(graphicsState);
+
+                    PdfData.BeginText();
+                    PdfData.SetColorFill(BaseColor.LIGHT_GRAY);
+                    PdfData.SetFontAndSize(baseFont,40);
+
+                    this.Dispatcher.Invoke(() => PdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text, pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
+
+                    PdfData.EndText();
+                }
+
+                PDFStamper.Close();
+                reader.Close();
             }
             catch
             {
