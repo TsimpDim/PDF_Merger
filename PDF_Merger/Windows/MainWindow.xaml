@@ -7,10 +7,10 @@
         mc:Ignorable="d"
         Title="PDF Merger" Height="450" Width="900" Icon="/Resources/PDF_Merger_Icon.ico"  WindowStyle="ToolWindow">
 
-
     <DockPanel>
 
         <StackPanel DockPanel.Dock="Left">
+
             <Button   Content="Open Files" Click="Explorer_Button_Click"  Width="250" Height="25" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" BorderBrush="#FF4AA5FF" Margin="0 1 0 0" />
             <Button   Content="Merge!" Click="MergePDF" Width="250" Height="25" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Background="White" BorderBrush="#FF4AA5FF" Margin="0 1 0 0"/>
 
@@ -37,7 +37,6 @@
                 <ComboBox Name="dropdown" Visibility="Hidden" Background="#FFC7C7C7" BorderBrush="#FF595757">
                     <ComboBoxItem  IsSelected="True">Under Content</ComboBoxItem>
                     <ComboBoxItem>Over Content</ComboBoxItem>
-
                 </ComboBox>
 
             </StackPanel>

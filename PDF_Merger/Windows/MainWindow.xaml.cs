@@ -97,67 +97,56 @@ namespace PDF_Merger
 
         private void CreateMergedPdf(object sender, DoWorkEventArgs e)
         {
-           FileStream stream = new FileStream(pdfname, FileMode.Create);
-            
+            using (FileStream stream = new FileStream(pdfname, FileMode.Create)) {
 
                 Document pdfDoc = new Document(PageSize.A4);
-
                 PdfCopy pdf = new PdfCopy(pdfDoc, stream);
 
                 pdfDoc.Open();
-                int i = -1;
+                int i = 0;
 
 
                 foreach (File_class newpdf in AddedPDFs)
                 {
-                    (sender as BackgroundWorker).ReportProgress(++i);
+                    (sender as BackgroundWorker).ReportProgress(i++);
 
                     if (newpdf.toMerge)
                     {
                         PdfReader reader = new PdfReader(newpdf.file_path);
+                        pdf.AddDocument(reader);
 
-                        try
-                        {
-                            pdf.AddDocument(reader);
-                        }
-                        catch
-                        {
-
-                        }
                         this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
 
                         if (add_wtrmk)//This is called for every FILE
                         {
-                            AddWatermark(reader, stream);
+                            AddWatermark(reader, stream,i,AddedPDFs.Count);
                         }
-
-
-
                     }
 
 
-
-
                 }
-            
-                string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
 
-                this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
+                if (pdfDoc.IsOpen() && !add_wtrmk)
+                {
+                    pdfDoc.Close();
+                }
 
-            if (pdfDoc.IsOpen() && !add_wtrmk)
-            {
-                pdfDoc.Close();
             }
 
+            string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
+
+            this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
+
+            
             if (File.Exists(endfloc))
             {
                 File.Delete(endfloc);
             }
-                
-                File.Move(from, endfloc); //Move from .exe path to desired path
-                (sender as BackgroundWorker).ReportProgress(i++);
 
-           
+            File.Move(from, endfloc); //Move from .exe path to desired path
+            (sender as BackgroundWorker).ReportProgress(i++);
+
+
 
             if (open_dir_after_merge)
             {
@@ -176,50 +165,63 @@ namespace PDF_Merger
         }
 
 
-        private void AddWatermark(PdfReader reader,FileStream stream)
+        private void AddWatermark(PdfReader reader, FileStream stream,int curFileIndex,int totalFiles)
         {
-            try
-            {
+            PdfStamper pdfStamper = new PdfStamper(reader, stream);//This is called for every PAGE of the file
+            
 
-                PdfStamper PDFStamper = new PdfStamper(reader, stream);
-
-                for (int pgIndex = 1; pgIndex <= PDFStamper.Reader.NumberOfPages; pgIndex++)
+                for (int pgIndex = 1; pgIndex <= reader.NumberOfPages; pgIndex++)
                 {
                     Rectangle pageRectangle = reader.GetPageSizeWithRotation(pgIndex);
-                    PdfContentByte PdfData = null;
+                    PdfContentByte pdfData; //Contains graphics and text content of page returned by pdfstamper
 
-                    if (this.Dispatcher.Invoke(() => dropdown.Text == "Over Content"))
+
+                    if (this.Dispatcher.Invoke(() => dropdown.Text == "Under Content"))
                     {
-                        PdfData = PDFStamper.GetOverContent(pgIndex);
+                        pdfData = pdfStamper.GetUnderContent(pgIndex);
                     }
-                    else
+                    else if (this.Dispatcher.Invoke(() => dropdown.Text == "Over Content"))
                     {
-                       PdfData = PDFStamper.GetUnderContent(pgIndex);
+                        pdfData = pdfStamper.GetOverContent(pgIndex);
+                    }
+                    else//Just in case
+
+                    {
+                        MessageBox.Show("Something went wrong when adding the watermark");
+                        return;
                     }
 
-                    BaseFont baseFont = BaseFont.CreateFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
+                    //Set font
+                    pdfData.SetFontAndSize(BaseFont.CreateFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 40);
+
+                    //Create new graphics state and assign opacity
                     PdfGState graphicsState = new PdfGState();
-                    graphicsState.FillOpacity = 0.35F;
+                    graphicsState.FillOpacity = 0.25F;
 
-                    PdfData.SetGState(graphicsState);
+                    //Set graphics state to pdfcontentbyte
+                    pdfData.SetGState(graphicsState);
 
-                    PdfData.BeginText();
-                    PdfData.SetColorFill(BaseColor.LIGHT_GRAY);
-                    PdfData.SetFontAndSize(baseFont,40);
+                    //Color of watermark
+                    pdfData.SetColorFill(BaseColor.GRAY);
 
-                    this.Dispatcher.Invoke(() => PdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text, pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
+                    pdfData.BeginText();
 
-                    PdfData.EndText();
+                    //Show text as per position and rotation
+                    this.Dispatcher.Invoke(() => pdfData.ShowTextAligned(Element.ALIGN_CENTER, WtrmkTextbox.Text, pageRectangle.Width / 2, pageRectangle.Height / 2, 45));
+
+                    pdfData.EndText();
+
                 }
 
-                PDFStamper.Close();
-                reader.Close();
-            }
-            catch
+            if(curFileIndex == totalFiles)
             {
-
+                pdfStamper.Dispose();
             }
+            
+
+            
         }
+  
 
         private static PdfStamper GetPdfStamper(PdfReader reader, FileStream stream)
         {
