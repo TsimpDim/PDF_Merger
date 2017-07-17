@@ -21,8 +21,8 @@ namespace PDF_Merger
     public partial class MainWindow : Window
     {
         int i = 0;
-        ObservableCollection<File_class> AddedPDFs = new ObservableCollection<File_class>(); //All the added PDFs are added here
-        bool open_file_after_merge, open_dir_after_merge;
+        ObservableCollection<_File> AddedPDFs = new ObservableCollection<_File>(); //All the added PDFs are added here
+        bool open_file_after_merge, open_dir_after_merge, add_wtrmk;
         string pdfname, endfloc;
 
         public MainWindow()
@@ -41,7 +41,7 @@ namespace PDF_Merger
 
             foreach (string newfile in openDlg.FileNames)//For every file he chose
             {
-                AddedPDFs.Add(new File_class { toMerge = true, file_id = i, file_path = newfile });//Add the new pdf to the array
+                AddedPDFs.Add(new _File { toMerge = true, file_id = i, file_path = newfile });//Add the new pdf to the array
                 i++;//Iterate the id
             }
 
@@ -86,8 +86,6 @@ namespace PDF_Merger
                 worker.ProgressChanged += worker_ProgressChanged;
                 worker.RunWorkerAsync();
 
-        
-
             }
         }
 
@@ -101,48 +99,117 @@ namespace PDF_Merger
         {
             using (FileStream stream = new FileStream(pdfname, FileMode.Create))
             {
-
-                Document pdfDoc = new Document(PageSize.A4);
-                PdfCopy pdf = new PdfCopy(pdfDoc, stream);
-                pdfDoc.Open();
-
+                
+                Document document = new Document();
+                PdfCopy pdf = new PdfCopy(document, stream);
+                PdfReader reader = null;
                 int i = 0;
 
-
-                foreach (File_class newpdf in AddedPDFs)
+                try
                 {
-
-                    (sender as BackgroundWorker).ReportProgress(i++);
-
-                    if (newpdf.toMerge)
+                    document.Open();
+                    foreach (_File file in AddedPDFs)
                     {
+                        (sender as BackgroundWorker).ReportProgress(i++);
 
-                        PdfReader reader = new PdfReader(newpdf.file_path);
-
+                        reader = new PdfReader(file.file_path);
                         pdf.AddDocument(reader);
-                        this.Dispatcher.Invoke(() => progBtxt.Text = "Merging file #" + newpdf.file_id + "..."); //Dispatcher.Invoke since UI is on seperate thread
-
+                        reader.Close();
                     }
                 }
-
-                if (pdfDoc != null)
-                    pdfDoc.Close();
-
-                string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
-                
-                this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
-                if (File.Exists(endfloc))
+                catch (Exception)
                 {
-                    File.Delete(endfloc);
+                    if (reader != null)
+                    {
+                        reader.Close();
+                    }
                 }
-                File.Move(from, endfloc); //Move from .exe path to desired path
-                (sender as BackgroundWorker).ReportProgress(i++);
+                finally
+                {
+                    if (document != null)
+                    {
+                        document.Close();
+                    }
+                }
+            }
 
-           
+
+            FinalizePDF();
+            (sender as BackgroundWorker).ReportProgress(i++);
+
+        }
+
+        private void AddWatermark(string pdfloc)
+        {
+            PdfReader reader = new PdfReader(pdfloc);
+
+            using (FileStream fs = new FileStream("_wtrmked.pdf", FileMode.Create, FileAccess.Write, FileShare.None))
+            using (PdfStamper stamper = new PdfStamper(reader, fs))
+            {
+                int pageCount = reader.NumberOfPages;
+
+                PdfLayer layer = new PdfLayer("WatermarkLayer", stamper.Writer);
+
+                for (int i = 1; i <= pageCount; i++)
+                {
+
+                    Rectangle rect = reader.GetPageSize(i);
+
+
+                    PdfContentByte cb = null;
+                    if (this.Dispatcher.Invoke(() => dropdown.SelectedValue.ToString() == "Under Content"))
+                    {
+                        cb = stamper.GetUnderContent(i);
+                    }
+                    else
+                    {
+                        cb = stamper.GetOverContent(i);
+                    }
+
+                    // Tell the cb that the next commands should be "bound" to this new layer
+                    cb.BeginLayer(layer);
+                    cb.SetFontAndSize(BaseFont.CreateFont(
+                      BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED), 50);
+
+                    PdfGState gState = new PdfGState();
+                    gState.FillOpacity = 0.25f;
+                    cb.SetGState(gState);
+
+                    cb.SetColorFill(BaseColor.BLACK);
+                    cb.BeginText();
+                    cb.ShowTextAligned(PdfContentByte.ALIGN_CENTER, this.Dispatcher.Invoke(() => WtrmkTextbox.Text), rect.Width / 2, rect.Height / 2, 45f);
+                    cb.EndText();
+
+                    // Close the layer
+                    cb.EndLayer();
+                }
+            }
+            reader.Close();
+        }
+
+        private void FinalizePDF()
+        {
+            string from = AppDomain.CurrentDomain.BaseDirectory + @"\" + pdfname;
+            this.Dispatcher.Invoke(() => progBtxt.Text = "Moving file...");
+
+            if (add_wtrmk)
+            {
+                this.Dispatcher.Invoke(() => progBtxt.Text = "Adding watermark...");
+
+                AddWatermark(from);
+                string wtrmked_path = AppDomain.CurrentDomain.BaseDirectory + @"\_wtrmked.pdf";
+
+                File.Replace(wtrmked_path, from, null); // Replace the bare file with the watermaked one
+            }
 
 
 
-            }//End of stream
+            if (File.Exists(endfloc))
+            {
+                File.Delete(endfloc);
+            }
+            File.Move(from, endfloc); //Move from .exe path to desired path
+
 
 
             if (open_dir_after_merge)
@@ -157,11 +224,7 @@ namespace PDF_Merger
 
             this.Dispatcher.Invoke(() => progBtxt.Text = "Merge complete");
             System.Windows.MessageBox.Show("Merge Complete", "Done!");
-
-
         }
-
-
 
         private void ChangeInclusion(object sender, MouseButtonEventArgs e)
         {
@@ -170,7 +233,6 @@ namespace PDF_Merger
             AddedPDFs[clicked].toMerge = !AddedPDFs[clicked].toMerge; //Change the property to the opposite (False to True and vv)
 
         }
-
 
 
         //Checkboxes
@@ -205,6 +267,28 @@ namespace PDF_Merger
             open_dir_after_merge = checkBox.IsChecked.Value;
         }
 
+        //Add watermark to file
+        private void CheckBox_Unchecked_wtrmk(object sender, RoutedEventArgs e)
+        {
+            Handler_wtrmk(sender as CheckBox);
+
+            WtrmkTextbox.Visibility = Visibility.Hidden;
+            dropdown.Visibility = Visibility.Hidden;
+        }
+
+        private void CheckBox_Checked_wtrmk(object sender, RoutedEventArgs e)
+        {
+            Handler_wtrmk(sender as CheckBox);
+
+            WtrmkTextbox.Visibility = Visibility.Visible;
+            dropdown.Visibility = Visibility.Visible;
+
+        }
+
+        private void Handler_wtrmk(CheckBox checkBox)
+        {
+            add_wtrmk = checkBox.IsChecked.Value;
+        }
 
 
         private void Move_Up(object sender, RoutedEventArgs e)//Move up pdf for insertion
@@ -217,7 +301,6 @@ namespace PDF_Merger
 
 
                 /*Make sure the file_id's keep increasing order
-
                  if (AddedPDFs[selectedIndex - 1].file_id < AddedPDFs[selectedIndex].file_id)
                  {
                      int tmp = itemToMoveUp.file_id;
@@ -286,7 +369,7 @@ namespace PDF_Merger
 
 
         //FILE CLASS
-        public class File_class : INotifyPropertyChanged //The class under which we save the files the user chooses
+        public class _File : INotifyPropertyChanged //The class under which we save the files the user chooses
         {
             private bool _tomerge;
             private int _file_id;
