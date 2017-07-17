@@ -1,6 +1,6 @@
 ![Logo](https://github.com/TsimpDim/PDF_Merger/blob/master/PDF_Merger/Resources/PDF_Merger_Icon.ico?raw=true)
  
-#PDF_Merger
+# PDF_Merger
 
 ## What is this project about?
 
