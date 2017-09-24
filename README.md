@@ -8,7 +8,7 @@ I didn't like not being able to merge .PDFs without spending money or uploading 
 
 ## How do I install it?
 
-Run the .exe inside the "Release" folder.
+Clone the repository and run the .exe inside the "Release" folder.
 
 ## Misc
 
